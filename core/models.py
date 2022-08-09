@@ -1,3 +1,4 @@
+from ast import Or
 from django.db.models.signals import post_save
 from django.conf import settings
 from django.db import models
@@ -7,9 +8,11 @@ from django_countries.fields import CountryField
 
 
 CATEGORY_CHOICES = (
-    ('S', 'Shirt'),
-    ('SW', 'Sport wear'),
-    ('OW', 'Outwear')
+    ('L', 'Legume'),
+    ('V', 'Veggies'),
+    ('Me', 'Meat'),
+    ('Mi', 'Milk'),
+    ('O', 'Others')
 )
 
 LABEL_CHOICES = (
@@ -87,6 +90,8 @@ class OrderItem(models.Model):
             return self.get_total_discount_item_price()
         return self.get_total_item_price()
 
+    def getItem(self):
+        return self.item.title
 
 class Order(models.Model):
     user = models.ForeignKey(settings.AUTH_USER_MODEL,
@@ -130,7 +135,9 @@ class Order(models.Model):
         if self.coupon:
             total -= self.coupon.amount
         return total
-
+    
+    def get_Items(self):
+        return self.items.all()    
 
 class Address(models.Model):
     user = models.ForeignKey(settings.AUTH_USER_MODEL,
@@ -155,7 +162,7 @@ class Payment(models.Model):
                              on_delete=models.SET_NULL, blank=True, null=True)
     amount = models.FloatField()
     timestamp = models.DateTimeField(auto_now_add=True)
-
+    items = models.CharField(max_length=50000)
     def __str__(self):
         return self.user.username
 

@@ -1,0 +1,154 @@
+{% extends "base.html" %} {% block content %}
+<div class="container">
+  <!--Navbar-->
+  <nav
+    class="navbar navbar-expand-lg navbar-dark mdb-color lighten-3 mt-3 mb-5"
+  >
+    <!-- Navbar brand -->
+    <span class="navbar-brand">Categories:</span>
+
+    <!-- Collapse button -->
+    <button
+      class="navbar-toggler"
+      type="button"
+      data-toggle="collapse"
+      data-target="#basicExampleNav"
+      aria-controls="basicExampleNav"
+      aria-expanded="false"
+      aria-label="Toggle navigation"
+    >
+      <span class="navbar-toggler-icon"></span>
+    </button>
+
+    <!-- Collapsible content -->
+    <div class="collapse navbar-collapse" id="basicExampleNav">
+      <!-- Links -->
+      <ul class="navbar-nav mr-auto">
+        <li class="nav-item active">
+          <a class="nav-link" href="/"
+            >All
+            <span class="sr-only">(current)</span>
+          </a>
+        </li>
+        <li class="nav-item">
+          <a class="nav-link" href="/legumeCategory/">Bakery</a>
+        </li>
+        <li class="nav-item">
+          <a class="nav-link" href="/veggiesCategory/">Veggies</a>
+        </li>
+        <li class="nav-item">
+          <a class="nav-link" href="/meatCategory/">Meat</a>
+        </li>
+        <li class="nav-item">
+          <a class="nav-link" href="/milkCategory/">Milk</a>
+        </li>
+        <li class="nav-item">
+          <a class="nav-link" href="/othersCategory/">Others</a>
+        </li>
+        <li class="nav-item">
+          <a class="nav-link" href="/recommendedCategory/">Recommended</a>
+        </li>
+        <li class="nav-item">
+          <a class="nav-link" href="/Chat/">Chat</a>
+        </li>
+      </ul>
+      <!-- Links -->
+
+      <form class="form-inline">
+        <div class="md-form my-0">
+          <input
+            class="form-control mr-sm-2"
+            type="text"
+            placeholder="Search"
+            aria-label="Search"
+          />
+        </div>
+      </form>
+    </div>
+    <!-- Collapsible content -->
+  </nav>
+  <!--/.Navbar-->
+
+  <!--Section: Products v.3-->
+
+  <section class="text-center mb-4">
+    <!DOCTYPE html>
+    <html>
+    <head>
+    <meta name="viewport" content="width=device-width, initial-scale=1">
+    <style>
+    body {
+      font-family: "Lato", sans-serif;
+    }
+    
+    .sidenav {
+      height: 100%;
+      width: 260px;
+      position: fixed;
+      z-index: 1;
+      top: 100;
+      left: 0;
+      background-color: #1121;
+      overflow-x: hidden;
+      padding-top: 28px;
+      display: -webkit-inline-box;
+    }
+    
+    .sidenav a {
+      padding: 10px 18px 16px 16px;
+      text-decoration: none;
+      font-size: 25px;
+      color: #818181;
+      display: block;
+    }
+    
+    .sidenav a:hover {
+      color: black;
+    }
+    
+    .main {
+      margin-left: 280px; /* Same as the width of the sidenav */
+      font-size: 28px; /* Increased text to enable scrolling */
+      padding: 0px 10px;
+    }
+    
+    @media screen and (max-height: 450px) {
+      .sidenav {padding-top: 15px;}
+      .sidenav a {font-size: 18px;}
+    }
+    </style>
+    </head>
+    <body>
+    
+    <div class="sidenav">
+      <a href="#about">Friend List</a>
+      <a href="#services">add Friend</a>
+
+    </div>
+    
+    <div class="main">
+        
+        <div class="chat-popup" id="myForm">
+            <textarea placeholder="Type message.." style="height: 400px; width: 700px;" name="msgText" required></textarea>
+
+            <form action="sendText()" style=" display:flex; margin:20px 0px 0px 70px" class="form-container">
+              {% comment %} <h1>Chat</h1> {% endcomment %}
+          
+              {% comment %} <label for="msg"><b>Message</b></label> {% endcomment %}
+              <textarea placeholder="Type message.." style="height:50px; width:500px" name="msg" required></textarea>
+          
+              <button type="submit" class="btn">Send</button>
+              <button type="button" class="btn cancel" onclick="closeForm()">Close</button>
+            </form>
+          </div>
+    
+    </div>
+       
+    </body>
+    </html> 
+    
+    </div>
+    <div id="Recomendage" class="Pageing"></div>
+  </section>
+</div>
+{% endblock content %}

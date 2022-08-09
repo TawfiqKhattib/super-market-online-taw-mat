@@ -1,8 +1,21 @@
+# from distutils.log import debug
+# from doctest import DebugRunner
+# import random
+# from re import template
+# from statistics import mode
+from asyncio.windows_events import NULL
+from distutils.command.config import config
+import operator
+from pyexpat import model
 import random
+from site import USER_SITE
+import sqlite3
 import string
-
+from requests import request
+# import django
+# from django.db import models
 import stripe
-from django.conf import settings
+from django.conf import LazySettings, settings
 from django.contrib import messages
 from django.contrib.auth.decorators import login_required
 from django.contrib.auth.mixins import LoginRequiredMixin
@@ -11,12 +24,25 @@ from django.shortcuts import redirect
 from django.shortcuts import render, get_object_or_404
 from django.utils import timezone
 from django.views.generic import ListView, DetailView, View
+# from django.views.generic.list import MultipleObjectTemplateResponseMixin, BaseListView, MultipleObjectMixin
+from django.utils.functional import LazyObject, SimpleLazyObject
+from django.contrib.auth.base_user import AbstractBaseUser
 
 from .forms import CheckoutForm, CouponForm, RefundForm, PaymentForm
 from .models import Item, OrderItem, Order, Address, Payment, Coupon, Refund, UserProfile
+from django.views.generic.base import ContextMixin, TemplateResponseMixin, View
+from debug_toolbar.panels.sql.forms import SQLSelectForm
+from mlxtend.preprocessing import TransactionEncoder
+from mlxtend.frequent_patterns import apriori, association_rules
+import pandas as pd
+import numpy as np
 
 stripe.api_key = settings.STRIPE_SECRET_KEY
 
+cart_items = []
+requestUser = NULL
+def get_CartItems():
+    return cart_items
 
 def create_ref_code():
     return ''.join(random.choices(string.ascii_lowercase + string.digits, k=20))
@@ -26,7 +52,7 @@ def products(request):
     context = {
         'items': Item.objects.all()
     }
-    return render(request, "products.html", context)
+    return render(request, "product.html", context)
 
 
 def is_valid_form(values):
@@ -215,20 +241,21 @@ class PaymentView(View):
                 'DISPLAY_COUPON_FORM': False,
                 'STRIPE_PUBLIC_KEY' : settings.STRIPE_PUBLIC_KEY
             }
-            userprofile = self.request.user.userprofile
-            if userprofile.one_click_purchasing:
-                # fetch the users card list
-                cards = stripe.Customer.list_sources(
-                    userprofile.stripe_customer_id,
-                    limit=3,
-                    object='card'
-                )
-                card_list = cards['data']
-                if len(card_list) > 0:
-                    # update the context with the default card
-                    context.update({
-                        'card': card_list[0]
-                    })
+            # userprofile = self.request.user.userprofile
+            # if userprofile.one_click_purchasing:
+            #     # fetch the users card list
+            #     cards = stripe.Customer.list_sources(
+            #         userprofile.stripe_customer_id,
+            #         limit=3,
+            #         object='card'
+            #     )
+            #     card_list = cards['data']
+            #     if len(card_list) > 0:
+            #         # update the context with the default card
+            #         context.update({
+            #             'card': card_list[0]
+            #         })
+                    
             return render(self.request, "payment.html", context)
         else:
             messages.warning(
@@ -238,26 +265,33 @@ class PaymentView(View):
     def post(self, *args, **kwargs):
         order = Order.objects.get(user=self.request.user, ordered=False)
         form = PaymentForm(self.request.POST)
-        userprofile = UserProfile.objects.get(user=self.request.user)
+        
+        # form2 = SQLSelectForm()
+        # query = "insert into core_payment (amount, user_id) values (15,4)"
+        # cursor = form2.cursor
+        # cursor.execute(query)
+        
+        # userprofile = UserProfile.objects.get(user=self.request.user)
+        
         if form.is_valid():
             token = form.cleaned_data.get('stripeToken')
             save = form.cleaned_data.get('save')
             use_default = form.cleaned_data.get('use_default')
 
-            if save:
-                if userprofile.stripe_customer_id != '' and userprofile.stripe_customer_id is not None:
-                    customer = stripe.Customer.retrieve(
-                        userprofile.stripe_customer_id)
-                    customer.sources.create(source=token)
+            # if save:
+                # if userprofile.stripe_customer_id != '' and userprofile.stripe_customer_id is not None:
+                #     customer = stripe.Customer.retrieve(
+                #         userprofile.stripe_customer_id)
+                #     customer.sources.create(source=token)
 
-                else:
-                    customer = stripe.Customer.create(
-                        email=self.request.user.email,
-                    )
-                    customer.sources.create(source=token)
-                    userprofile.stripe_customer_id = customer['id']
-                    userprofile.one_click_purchasing = True
-                    userprofile.save()
+                # else:
+                #     customer = stripe.Customer.create(
+                #         email=self.request.user.email,
+                #     )
+                #     customer.sources.create(source=token)
+                #     userprofile.stripe_customer_id = customer['id']
+                #     userprofile.one_click_purchasing = True
+                #     userprofile.save()
 
             amount = int(order.get_total() * 100)
 
@@ -268,7 +302,7 @@ class PaymentView(View):
                     charge = stripe.Charge.create(
                         amount=amount,  # cents
                         currency="usd",
-                        customer=userprofile.stripe_customer_id
+                        # customer=userprofile.stripe_customer_id
                     )
                 else:
                     # charge once off on the token
@@ -283,8 +317,12 @@ class PaymentView(View):
                 payment.stripe_charge_id = charge['id']
                 payment.user = self.request.user
                 payment.amount = order.get_total()
+                orderItems = ','.join(str(v) for v in order.items.all())
+                orderItems = orderItems.split(',')
+                payment.items = ','.join(str(' '.join(item for item in orderitem.split(' ')[2:])) for orderitem in orderItems)
+                print(payment.items)
                 payment.save()
-
+                
                 # assign the payment to the order
 
                 order_items = order.items.all()
@@ -296,7 +334,7 @@ class PaymentView(View):
                 order.payment = payment
                 order.ref_code = create_ref_code()
                 order.save()
-
+                cart_items.clear()
                 messages.success(self.request, "Your order was successful!")
                 return redirect("/")
 
@@ -338,37 +376,330 @@ class PaymentView(View):
             except Exception as e:
                 # send an email to ourselves
                 messages.warning(
-                    self.request, "A serious error occurred. We have been notifed.")
+                    self.request, e)
                 return redirect("/")
 
         messages.warning(self.request, "Invalid data received")
         return redirect("/payment/stripe/")
 
 
-class HomeView(ListView):
-    model = Item
-    paginate_by = 10
-    template_name = "home.html"
+
 
 
 class OrderSummaryView(LoginRequiredMixin, View):
     def get(self, *args, **kwargs):
         try:
+            # requestUser = self.request.user
             order = Order.objects.get(user=self.request.user, ordered=False)
             context = {
                 'object': order
             }
+            lazyob = LazyObject()
+            simpleLazyObject = SimpleLazyObject(lazyob)
+            print(self.request.user)
+            print("1111111111111111111111111111")
+            print(order)
+            print("22222222222222222222222222")
+            print(context)
+            print("333333333333333333333333333")
+            print(self.request)
+            print("444444444444444444444444444444")
             return render(self.request, 'order_summary.html', context)
         except ObjectDoesNotExist:
             messages.warning(self.request, "You do not have an active order")
             return redirect("/")
 
 
+
+    
+class LegumeDetailView(ListView ):
+    # ToDo : check if self.request.user not Anonymous render 
+     
+    #  te = TemplateResponseMixin
+    #  mt = MultipleObjectTemplateResponseMixin #
+    #  co = ContextMixin
+    #  mo = MultipleObjectMixin
+    #  view = View
+    #  blv = BaseListView#
+    #  lvl = ListView
+     
+     model=Item
+    #  paginate_by = 4
+     template_name = 'legumeCategory.html'
+     
+    
+class VeggiesDetailView(ListView):
+     model=Item
+    #  paginate_by = 4
+     template_name = 'veggiesCategory.html'
+        
+    
+class MeatDetailView(ListView):
+     model=Item
+    #  paginate_by = 4
+     template_name = 'meatCategory.html'
+           
+ 
+    
+class MilkDetailView(ListView):
+     model=Item
+    #  paginate_by = 4
+     template_name = 'milkCategory.html'
+           
+
+
+class OthersDetailView(ListView):
+     model=Item
+    #  paginate_by = 4
+     template_name = 'othersCategory.html'
+ 
+          
+class RecommendedDetailView(ListView):
+    # model=Item
+    # template_name = 'recommendedCategory.html'
+    def get(self, *args, **kwargs):
+         try:
+             # requestUser = self.request.user
+            #  ListView.model=Item
+            #  ListView.template_name = 'recommendedCategory.html'
+             data=[]
+             order = Order.objects.get(user=self.request.user, ordered=False)
+            #  model = Item
+             conn = sqlite3.connect("C:\\Users\\Win10\\Desktop\\django-ecommerce-master\\django-ecommerce\\FinalFile.sqli")
+             cur = conn.cursor()
+             payments = cur.execute("SELECT items from core_payment").fetchall()
+             paymentsItems = ','.join(str(v) for v in payments)
+             paymentsItems = paymentsItems.replace("('","").translate(({ord("["):""})).translate(({ord("]"):""})).split(",),")
+            #  paymentsItems.pop()
+            #  print(paymentsItems)
+             for item in paymentsItems:
+                newItem = item.split(',')
+                # newItem.pop()
+                # print("ssssssssssssssssssssssssssssssssssssssssssss")
+                # print(newItem)
+                if(newItem[0] == ""):
+                    newItem.remove(newItem[0])
+                
+                newItem[len(newItem)-1] = ''.join(str(v) for v in list(newItem[len(newItem)-1].replace('"',"'"))[0:len(newItem[len(newItem)-1])-1])
+                # print(newItem[len(newItem)-1])
+                data.append(newItem)
+                
+             data[len(data)-1].pop()
+             lastVar = data[len(data)-1]
+            #  print(lastVar[len(lastVar)-1])
+             lastVar[len(lastVar)-1] = ''.join(str(v) for v in list(lastVar[len(lastVar)-1].replace("'","")))
+            #  print(lastVar[len(lastVar)-1])
+            # ToDo here need to add ML to check supp and con
+            #  print("kkkkkkkkkkkkkkkkkkkkkkkkkkkkkkkkkkkkkkkkkkkkkkkkkkkkkkkkkkkkkkkkkkkkkkk")
+            #  print(type(data[len(data)-1][1]))
+            #  data[len(data)-1][1] = ''.join(str(v) for v in list(data[len(data)-1][1].replace('"',"'"))[0:len(data[len(data)-1][1])-1])
+            #  print(''.join(str(v) for v in list(data[len(data)-1][1].replace('"',"'"))[0:len(data[len(data)-1][1])-2]))
+             a = TransactionEncoder()
+             a_data = a.fit(data).transform(data)
+             df = pd.DataFrame(a_data,columns=a.columns_)
+             df = df.replace(False,0)
+            #  print(df)
+             df = apriori(df, min_support = 0.1, use_colnames = True, verbose = 1)
+             print(df)
+             df_ar = association_rules(df, metric = "confidence", min_threshold = 0.1)
+             print(df_ar)
+             print(data)
+             print("111111111111111111111111111111111111111111111111111111111111111111111111111111111111111111111111111111111111")
+            
+            #  allItemsData=[]
+            #  allItemsData = items[11 : len(Item.objects.all())].replace("Item: ","").replace("<","").replace(">","").split(",")
+            #  allItemsData = Item.objects.all()
+            #  allItemsData = allItemsData[-len(Item.objects.all()) :]
+            #  print(len(Item.objects.all()))
+            #  print(allItemsData[0])
+            #  print(allItemsData)
+            #  print(Item.category.__get__(Item.objects.first()))
+            #  print(allItemsData)
+            #  listItems = TransactionEncoder()
+            #  listItems_data = listItems.fit(allItemsData).transform(allItemsData)
+            #  df_Items = pd.DataFrame(listItems_data,columns=listItems.columns_)
+            #  df_Items = df_Items.replace(False,0)
+            #  print(df_Items)
+            #  df_Items = apriori(df_Items, min_support = 0.2, use_colnames = True, verbose = 1)
+            #  print(df_Items)
+            #  df_Items_ar = association_rules(df_Items, metric = "confidence", min_threshold = 0.6)
+            #  print(df_Items_ar)
+             
+             confidenceObj={}
+             print(Order.get_Items(order))
+             for item in Order.get_Items(order):
+                 for paymentItem in df_ar.iterrows():
+                     val = list(paymentItem[1]["antecedents"])
+                    #  print("22222222222222222222222222222222222222222222222222222222222222")
+                    #  print(list(paymentItem[1]["antecedents"]))
+                    #  print(item.getItem())
+                     for antecval in val:
+                        if(antecval == item.getItem()):
+                            consequents = list(paymentItem[1]["consequents"])
+                            confVal = paymentItem[1]["confidence"]
+                            for consval in consequents:
+                                # print("333333333333333333333333333333333333333333333333333333333333333333333333")
+                                # print(consval)
+                                # print(confVal)
+                                confidenceObj[consval] = confVal
+            
+             
+            #  for item in df_Items_ar.iterrows():
+            #      itemval = list(item[1]["consequents"])[0]
+            #      print(item)
+            #      print("666666666666666666666666666666666")
+            #      print(itemval)
+            #      if  confidenceObj[itemval]:
+            #          print("5555555555555555555555555555555555555555")
+            #          print(item)       
+            #          list(item[1]["consequents"])[0] = confidenceObj[itemval]
+             
+            #  allItems = df_Items_ar.sort_values('confidence', ascending=False)
+            #  allItemsOrderd = []
+            #  for item in allItems:
+            #      allItemsOrderd.append(list(item[1]["antecedents"])[0])
+            # ##########################################################################################
+             arrayItems = []
+             sorted(confidenceObj.values())
+             print("44444444444444444444444444444444444444444444444444")
+             print(confidenceObj)
+            #  itemOrder={}
+            #  conn = sqlite3.connect("C:\\Users\\Win10\\Desktop\\django-ecommerce-master\\django-ecommerce\\FinalFile.sqli")
+            #  cur = conn.cursor()
+             coreItems = cur.execute("SELECT * from core_recomended").fetchall()
+            #  print(type(coreItems))
+             if len(coreItems)==0:
+                coreItems = cur.execute("SELECT * from core_item").fetchall()
+            #  print(coreItems)
+             cur.execute("DELETE from core_recomended").fetchall()
+             
+             listconfidenceObj=[]
+             for k in confidenceObj.keys():
+                listconfidenceObj.insert(0,k)
+            #  print(listconfidenceObj)
+             for k in listconfidenceObj:
+                # print("99999999999999999999999999999999999")
+                # print(k)
+                # itemOrder = {
+                #     "'title'" : k, "'category'" : "'"+Item.category.__get__(k)+"'", "'discount_price'" : "'"+Item.discount_price.__get__(k)+"'",
+                #     "'discription'": "'"+Item.description.__get__(k)+"'", "'image'":"'"+Item.image.__get__(k)+"'", "'price'":"'"+Item.price.__get__(k)+"'",
+                #     "'slug'":"'"+Item.slug.__get__(k)+"'", "'label":"'"+Item.label.__get__(k)+"'"    
+                #   }
+                #  itemOrder["title"] = k
+                # arrayItems.append(newItem for newItem in coreItems if newItem["title"]==k) 
+                for newItem in coreItems:
+                    # print("999999999999999999999999999999999999999999988888888888888888888888888888888888565555555555555555555")
+                    # print(newItem)
+                    # print(k)
+                    # print(newItem[1])
+                    if newItem[1] == k:
+                        print("99999999999999999999999999999999999")
+                        print(newItem)
+                        cur.execute("INSERT INTO core_recomended ( title, price, discount_price, category, label, slug, description, image ) VALUES(?, ?, ?, ?, ?, ?, ?, ? )", (newItem[1],newItem[2],newItem[3],newItem[4],newItem[5],newItem[6],newItem[7],newItem[8])).fetchall()
+                        # print("999999999999999999999999999999999999999999988888888888888888888888888888888888565555555555555555555")
+                        # print(cur.execute("SELECT * from core_recomended").fetchall())
+                        arrayItems.append(newItem)
+            #  {arrayItems.append
+            #     ({
+            #         "'title'" : k, "'category'" : Item.category.__get__(k), "'discount_price'" : Item.discount_price.__get__(k),
+            #         "'discription'": Item.description.__get__(k), "'image'":Item.image.__get__(k), "'price'":Item.price.__get__(k),
+            #         "'slug'":Item.slug.__get__(k), "'label":Item.label.__get__(k)    
+            #     })
+            #    for k,v in sorted(confidenceObj.items(), key=lambda item: item[1])}
+             
+            #  allItemsData.exclude(k for k in arrayItems)
+             
+            #  listAllItemsData = list(allItemsData)
+            #  print(arrayItems)
+            #  print(10101010101010101010101010110101010101010101011010101010101)
+            #  print(listAllItemsData)
+            #  listAllItemsData.remove(k for k in arrayItems if k in listAllItemsData)
+            #  print("99999999999999999999999999999999999999999999999999999")
+            #  print(arrayItems)
+             for k in arrayItems:
+                 if k in coreItems:
+                     coreItems.remove(k)
+                     
+             for newItem in coreItems:
+                #  if not arrayItems.__contains__(item):
+                #      arrayItems.append({
+                #     "'title'" : k, "'category'" : Item.category.__get__(k), "'discount_price'" : Item.discount_price.__get__(k),
+                #     "'discription'": Item.description.__get__(k), "'image'":Item.image.__get__(k), "'price'":Item.price.__get__(k),
+                #     "'slug'":Item.slug.__get__(k), "'label":Item.label.__get__(k)    
+                # })
+                #  print(newItem)
+                 cur.execute("INSERT INTO core_recomended ( title, price, discount_price, category, label, slug, description, image ) VALUES(?, ?, ?, ?, ?, ?, ?, ? )",(newItem[1],newItem[2],newItem[3],newItem[4],newItem[5],newItem[6],newItem[7],newItem[8])).fetchall()
+                 arrayItems.append(newItem)
+             conn.commit()
+            #  print("8888888888888888888888888888888888888888888888888888888888888888")
+            #  print(arrayItems)
+             
+             context = {
+                 'object': order,
+                 'object_list': arrayItems,
+                 'payment_list' : data
+             }
+
+             return render(self.request, 'recommendedCategory.html', context)
+         except ObjectDoesNotExist:
+             messages.warning(self.request, "You do not have an active order")
+             return redirect("/")
+    # model=Item
+    # template_name = 'recommendedCategory.html'
+    # model=Item
+    # template_name = 'recommendedCategory.html'
+    # cart_items = order 
+    
+    # context = {
+    #              'object': cart_items
+    #          }
+    #  paginate_by = 4
+    #  order = Order.objects.get(user=self.request.user, ordered=False)
+    #  context = {
+    #         'object': order
+    #     }
+    # template_name = 'recommendedCategory.html'
+
+
+class ChatDetailView(ListView):
+    # model=Item
+    # template_name = 'recommendedCategory.html'
+    def get(self, *args, **kwargs):
+         try:
+             
+             conn = sqlite3.connect("C:\\Users\\Win10\\Desktop\\django-ecommerce-master\\django-ecommerce\\FinalFile.sqli")
+             cur = conn.cursor()
+            
+             coreItems = cur.execute("SELECT username,email  from auth_user").fetchall()
+
+             print(coreItems)
+             context = {
+                 'object_list': coreItems
+                 
+             }
+
+             return render(self.request, 'Chat.html', context)
+         except ObjectDoesNotExist:
+             messages.warning(self.request, "You do not have an active order")
+             return redirect("/")
+         
+         
 class ItemDetailView(DetailView):
     model = Item
     template_name = "product.html"
 
 
+class HomeView(ListView):
+    model = Item
+    # paginate_byl = 4
+    # paginate_byv = 4
+    # paginate_byme = 4
+    # paginate_bymi = 4
+    # paginate_byo = 4
+    # le = LegumeDetailView
+    # paginate_by = 4
+    template_name = "home.html"
+    
 @login_required
 def add_to_cart(request, slug):
     item = get_object_or_404(Item, slug=slug)
@@ -387,7 +718,10 @@ def add_to_cart(request, slug):
             messages.info(request, "This item quantity was updated.")
             return redirect("core:order-summary")
         else:
+            cart_items.append(order_item)
             order.items.add(order_item)
+            print("77777777777777777777777777777777777777777777777777777")
+            print(cart_items)
             messages.info(request, "This item was added to your cart.")
             return redirect("core:order-summary")
     else:
@@ -395,6 +729,9 @@ def add_to_cart(request, slug):
         order = Order.objects.create(
             user=request.user, ordered_date=ordered_date)
         order.items.add(order_item)
+        cart_items.append(order_item)
+        print("66666666666666666666666666666666666666666666666666666666666")
+        print(cart_items)
         messages.info(request, "This item was added to your cart.")
         return redirect("core:order-summary")
 

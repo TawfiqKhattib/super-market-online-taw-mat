@@ -1,142 +1,474 @@
-{% extends "base.html" %}
+{% extends "base.html" %} {% block content %}
+<main>
+  <div class="container">
+    <!--Navbar-->
+    <nav
+      class="navbar navbar-expand-lg navbar-dark mdb-color lighten-3 mt-3 mb-5"
+    >
+      <!-- Navbar brand -->
+      <span class="navbar-brand">Categories:</span>
 
-{% block content %}
-  <main>
-    <div class="container">
+      <!-- Collapse button -->
+      <button
+        class="navbar-toggler"
+        type="button"
+        data-toggle="collapse"
+        data-target="#basicExampleNav"
+        aria-controls="basicExampleNav"
+        aria-expanded="false"
+        aria-label="Toggle navigation"
+      >
+        <span class="navbar-toggler-icon"></span>
+      </button>
 
-      <!--Navbar-->
-      <nav class="navbar navbar-expand-lg navbar-dark mdb-color lighten-3 mt-3 mb-5">
-
-        <!-- Navbar brand -->
-        <span class="navbar-brand">Categories:</span>
-
-        <!-- Collapse button -->
-        <button class="navbar-toggler" type="button" data-toggle="collapse" data-target="#basicExampleNav"
-          aria-controls="basicExampleNav" aria-expanded="false" aria-label="Toggle navigation">
-          <span class="navbar-toggler-icon"></span>
-        </button>
-
-        <!-- Collapsible content -->
-        <div class="collapse navbar-collapse" id="basicExampleNav">
-
-          <!-- Links -->
-          <ul class="navbar-nav mr-auto">
-            <li class="nav-item active">
-              <a class="nav-link" href="#">All
-                <span class="sr-only">(current)</span>
-              </a>
-            </li>
-            <li class="nav-item">
-              <a class="nav-link" href="#">Shirts</a>
-            </li>
-            <li class="nav-item">
-              <a class="nav-link" href="#">Sport wears</a>
-            </li>
-            <li class="nav-item">
-              <a class="nav-link" href="#">Outwears</a>
-            </li>
-
-          </ul>
-          <!-- Links -->
-
-          <form class="form-inline">
-            <div class="md-form my-0">
-              <input class="form-control mr-sm-2" type="text" placeholder="Search" aria-label="Search">
-            </div>
-          </form>
-        </div>
-        <!-- Collapsible content -->
-
-      </nav>
-      <!--/.Navbar-->
-
-      <!--Section: Products v.3-->
-      <section class="text-center mb-4">
-
-        <div class="row wow fadeIn">
-
-          {% for item in object_list %}
-          <div class="col-lg-3 col-md-6 mb-4">
-
-            <div class="card">
-
-              <div class="view overlay">
-                {% comment %} <img src="https://mdbootstrap.com/img/Photos/Horizontal/E-commerce/Vertical/12.jpg" class="card-img-top" {% endcomment %}
-                <img src="{{ item.image.url }}" class="card-img-top">
-                <a href="{{ item.get_absolute_url }}">
-                  <div class="mask rgba-white-slight"></div>
-                </a>
-              </div>
-
-              <div class="card-body text-center">
-                <a href="" class="grey-text">
-                  <h5>{{ item.get_category_display }}</h5>
-                </a>
-                <h5>
-                  <strong>
-                    <a href="{{ item.get_absolute_url }}" class="dark-grey-text">{{ item.title }}
-                      <span class="badge badge-pill {{ item.get_label_display }}-color">NEW</span>
-                    </a>
-                  </strong>
-                </h5>
-
-                <h4 class="font-weight-bold blue-text">
-                  <strong>$
-                  {% if item.discount_price %}
-                  {{ item.discount_price }}
-                  {% else %}
-                  {{ item.price }}
-                  {% endif %}
-                  </strong>
-                </h4>
-
-              </div>
-
-            </div>
-
-          </div>
-          {% endfor %}
-        </div>
-
-      </section>
-      <!--Section: Products v.3-->
-
-      <!--Pagination-->
-
-      {% if is_paginated %}
-      <nav class="d-flex justify-content-center wow fadeIn">
-        <ul class="pagination pg-blue">
-
-          {% if page_obj.has_previous %}
-          <li class="page-item">
-            <a class="page-link" href="?page={{ page_obj.previous_page_number }}" aria-label="Previous">
-              <span aria-hidden="true">&laquo;</span>
-              <span class="sr-only">Previous</span>
-            </a>
-          </li>
-          {% endif %}
-
-          <li class="page-item active">
-            <a class="page-link" href="?page={{ page_obj.number }}">{{ page_obj.number }}
+      <!-- Collapsible content -->
+      <div class="collapse navbar-collapse" id="basicExampleNav">
+        <!-- Links -->
+        <ul class="navbar-nav mr-auto">
+          <li class="nav-item active">
+            <a class="nav-link" href="/"
+              >All
               <span class="sr-only">(current)</span>
             </a>
           </li>
-
-          {% if page_obj.has_next %}
-          <li class="page-item">
-            <a class="page-link" href="?page={{ page_obj.next_page_number }}" aria-label="Next">
-              <span aria-hidden="true">&raquo;</span>
-              <span class="sr-only">Next</span>
-            </a>
+          <li class="nav-item">
+            <a class="nav-link" href="/legumeCategory/">Bakery</a>
           </li>
-          {% endif %}
+          <li class="nav-item">
+            <a class="nav-link" href="/veggiesCategory/">Veggies</a>
+          </li>
+          <li class="nav-item">
+            <a class="nav-link" href="/meatCategory/">Meat</a>
+          </li>
+          <li class="nav-item">
+            <a class="nav-link" href="/milkCategory/">Milk</a>
+          </li>
+          <li class="nav-item">
+            <a class="nav-link" href="/othersCategory/">Others</a>
+          </li>
+          <li class="nav-item">
+            <a class="nav-link" href="/recommendedCategory/">Recommended</a>
+          </li>
+          <li class="nav-item">
+            <a class="nav-link" href="/Chat/">Chat</a>
+          </li>
         </ul>
-      </nav>
-      {% endif %}
+        <!-- Links -->
 
-    </div>
-  </main>
+        <form class="form-inline">
+          <div class="md-form my-0">
+            <input
+              class="form-control mr-sm-2"
+              type="text"
+              placeholder="Search"
+              aria-label="Search"
+            />
+          </div>
+        </form>
+      </div>
+      <!-- Collapsible content -->
+    </nav>
+    <!--/.Navbar-->
 
+    <!--Section: Products v.3-->
+    <section class="text-center mb-4">
+      <h1 style="width: 350px">Bakery</h1>
+      <div id="BakeryDiv" class="ctaegoryOrder">
+        <button class="page-link" id="btn_prevL" onclick="prevPageBakery()">
+          Previous
+        </button>
+        <div class="card" id="L" style="display: -webkit-inline-box"></div>
+        <button class="page-link" id="btn_nextL" onclick="nextPageBakery()">
+          Next
+        </button>
+      </div>
+      <h1 style="width: 350px">Fresh Veggies</h1>
+      <div id="VeggiesDiv" class="ctaegoryOrder">
+        <button class="page-link" id="btn_prevV" onclick="prevPageVeggies()">
+          Previous
+        </button>
+        <div class="card" id="V" style="display: -webkit-inline-box"></div>
+        <button class="page-link" id="btn_nextV" onclick="nextPageVeggies()">
+          Next
+        </button>
+      </div>
+
+      <h1 style="width: 350px">Fresh Meat</h1>
+      <div id="MeatDiv" class="ctaegoryOrder">
+        <button class="page-link" id="btn_prevMe" onclick="prevPageMeat()">
+          Previous
+        </button>
+        <div class="card" id="Me" style="display: -webkit-inline-box"></div>
+        <button class="page-link" id="btn_nextMe" onclick="nextPageMeat()">
+          Next
+        </button>
+      </div>
+
+      <h1 style="width: 350px">Fresh Milk</h1>
+      <div id="MilkDiv" class="ctaegoryOrder">
+        <button class="page-link" id="btn_prevMi" onclick="prevPageMilk()">
+          Previous
+        </button>
+        <div class="card" id="Mi" style="display: -webkit-inline-box"></div>
+        <button class="page-link" id="btn_nextMi" onclick="nextPageMilk()">
+          Next
+        </button>
+      </div>
+
+      <h1 style="width: 350px">Other Quality Products</h1>
+      <div id="OtherDiv" class="ctaegoryOrder">
+        <button class="page-link" id="btn_prevO" onclick="prevPageOther()">
+          Previous
+        </button>
+        <div class="card" id="O" style="display: -webkit-inline-box"></div>
+        <button class="page-link" id="btn_nextO" onclick="nextPageOther()">
+          Next
+        </button>
+      </div>
+    </section>
+  </div>
+
+  <script>
+    var records_per_page = 4;
+    var myData = [];
+    var relData = [];
+    var pagesNum = 0;
+
+    localStorage.setItem("current_pageBakery", 1);
+    localStorage.setItem("current_pageVeggies", 1);
+    localStorage.setItem("current_pageMeat", 1);
+    localStorage.setItem("current_pageMilk", 1);
+    localStorage.setItem("current_pageOther", 1);
+    localStorage.setItem("current_pageRecomend", 1);
+
+    var current_pageBakeryH = 1;
+    var BakeryData = [];
+    var val;
+    function prevPageBakery() {
+      if (parseInt(localStorage.getItem("current_pageBakeryH")) > 1) {
+        //current_pageBakeryH--;
+        val = parseInt(localStorage.getItem("current_pageBakeryH")) - 1;
+        localStorage.setItem("current_pageBakeryH", val);
+        changePage(val, "L");
+      }
+    }
+
+    function nextPageBakery() {
+      if (
+        parseInt(localStorage.getItem("current_pageBakeryH")) < numPagesBakery()
+      ) {
+        //current_pageBakeryH++;
+        val = parseInt(localStorage.getItem("current_pageBakeryH")) + 1;
+        localStorage.setItem("current_pageBakeryH", val);
+        changePage(val, "L");
+      }
+    }
+
+    function numPagesBakery() {
+      return Math.ceil(BakeryData.length / records_per_page);
+    }
+
+    var current_pageVeggiesH = 1;
+    var VeggiesData = [];
+    function prevPageVeggies() {
+      if (parseInt(localStorage.getItem("current_pageVeggiesH")) > 1) {
+        //current_pageVeggiesH--;
+        val = parseInt(localStorage.getItem("current_pageVeggiesH")) - 1;
+        localStorage.setItem("current_pageVeggiesH", val);
+        changePage(val, "V");
+      }
+    }
+
+    function nextPageVeggies() {
+      if (
+        parseInt(localStorage.getItem("current_pageVeggiesH")) <
+        numPagesVeggies()
+      ) {
+        //current_pageVeggiesH++;
+        val = parseInt(localStorage.getItem("current_pageVeggiesH")) + 1;
+        localStorage.setItem("current_pageVeggiesH", val);
+        changePage(val, "V");
+      }
+    }
+
+    function numPagesVeggies() {
+      return Math.ceil(VeggiesData.length / records_per_page);
+    }
+
+    var current_pageMeatH = 1;
+    var MeatData = [];
+    function prevPageMeat() {
+      if (parseInt(localStorage.getItem("current_pageMeatH")) > 1) {
+        //current_pageMeatH--;
+        val = parseInt(localStorage.getItem("current_pageMeatH")) - 1;
+        localStorage.setItem("current_pageMeatH", val);
+        changePage(val, "Me");
+      }
+    }
+
+    function nextPageMeat() {
+      if (
+        parseInt(localStorage.getItem("current_pageMeatH")) < numPagesMeat()
+      ) {
+        //current_pageMeatH++;
+        val = parseInt(localStorage.getItem("current_pageMeatH")) + 1;
+        localStorage.setItem("current_pageMeatH", val);
+        changePage(val, "Me");
+      }
+    }
+
+    function numPagesMeat() {
+      return Math.ceil(MeatData.length / records_per_page);
+    }
+
+    var current_pageMilkH = 1;
+    var MilkData = [];
+    function prevPageMilk() {
+      if (parseInt(localStorage.getItem("current_pageMilkH")) > 1) {
+        //current_pageMilkH--;
+        val = parseInt(localStorage.getItem("current_pageMilkH")) - 1;
+        localStorage.setItem("current_pageMilkH", val);
+        changePage(val, "Mi");
+      }
+    }
+
+    function nextPageMilk() {
+      if (
+        parseInt(localStorage.getItem("current_pageMilkH")) < numPagesMilk()
+      ) {
+        current_pageMilkH++;
+        val = parseInt(localStorage.getItem("current_pageMilkH")) + 1;
+        localStorage.setItem("current_pageMilkH", val);
+        changePage(val, "Mi");
+      }
+    }
+
+    function numPagesMilk() {
+      return Math.ceil(MilkData.length / records_per_page);
+    }
+
+    var current_pageOtherH = 1;
+    var OtherData = [];
+
+    function prevPageOther() {
+      if (parseInt(localStorage.getItem("current_pageOtherH")) > 1) {
+        //current_pageOtherH--;
+        val = parseInt(localStorage.getItem("current_pageOtherH")) - 1;
+        localStorage.setItem("current_pageOtherH", val);
+        changePage(val, "O");
+      }
+    }
+
+    function nextPageOther() {
+      if (
+        parseInt(localStorage.getItem("current_pageOtherH")) < numPagesOther()
+      ) {
+        //current_pageOtherH++;
+        val = parseInt(localStorage.getItem("current_pageOtherH")) + 1;
+        localStorage.setItem("current_pageOtherH", val);
+        changePage(val, "O");
+      }
+    }
+
+    function numPagesOther() {
+      return Math.ceil(OtherData.length / records_per_page);
+    }
+
+    function changePage(page, Category) {
+      var myPage;
+      var btn_next = document.getElementById("btn_next" + Category);
+      var btn_prev = document.getElementById("btn_prev" + Category);
+      var listing_table = document.getElementById(Category);
+      switch (Category) {
+        case "L":
+          relData = BakeryData;
+          if (page < 1) page = 1;
+          if (page > numPagesBakery()) {
+            page = numPagesBakery();
+          }
+          pagesNum = numPagesBakery();
+          localStorage.setItem("current_pageBakeryH", page);
+          break;
+        case "V":
+          relData = VeggiesData;
+          if (page < 1) page = 1;
+          if (page > numPagesVeggies()) {
+            page = numPagesVeggies();
+          }
+          pagesNum = numPagesVeggies();
+          localStorage.setItem("current_pageVeggiesH", page);
+          break;
+        case "Me":
+          relData = MeatData;
+          if (page < 1) page = 1;
+          if (page > numPagesMeat()) {
+            page = numPagesMeat();
+          }
+          pagesNum = numPagesMeat();
+          localStorage.setItem("current_pageMeatH", page);
+          break;
+        case "Mi":
+          relData = MilkData;
+          if (page < 1) page = 1;
+          if (page > numPagesMilk()) {
+            page = numPagesMilk();
+          }
+          pagesNum = numPagesMilk();
+          localStorage.setItem("current_pageMilkH", page);
+          break;
+        case "O":
+          relData = OtherData;
+          if (page < 1) page = 1;
+          if (page > numPagesOther()) {
+            page = numPagesOther();
+          }
+          pagesNum = numPagesOther();
+          localStorage.setItem("current_pageOtherH", page);
+          break;
+      }
+
+      listing_table.innerHTML = "";
+
+      for (
+        var i = (page - 1) * records_per_page;
+        i < page * records_per_page && i < relData.length;
+        i++
+      ) {
+        var div1 = document.createElement("div");
+        div1.className = "view overlay";
+        var img = document.createElement("img");
+        img.className = "card-img-top";
+        img.src = relData[i].fields.image;
+        var aCat = document.createElement("a");
+        aCat.className = "nav-link waves-effect waves-light";
+        aCat.setAttribute(
+          "href",
+          "http://127.0.0.1:8000/product/" + relData[i].fields.slug + "/"
+        );
+        var div2 = document.createElement("div");
+        div2.className = "mask rgba-white-slight";
+        aCat.appendChild(div2);
+
+        div1.appendChild(img);
+        div1.appendChild(aCat); ////////////////////////////
+
+        var div3 = document.createElement("div");
+        div3.className = "card-body text-center";
+        var a = document.createElement("a");
+        a.className = "grey-text nav-link waves-effect waves-light";
+        a.setAttribute(
+          "href",
+          "http://127.0.0.1:8000/product/" + relData[i].fields.slug + "/"
+        );
+        //var h = document.createElement("h5");
+        //h.innerHTML = relData[i].fields.category;
+        // a.appendChild(h);
+        div3.appendChild(a); ///////////////
+
+        var h5 = document.createElement("h5");
+        var strong = document.createElement("strong");
+        var ar = document.createElement("a");
+        ar.className = "dark-grey-text nav-link waves-effect waves-light";
+        ar.setAttribute(
+          "href",
+          "http://127.0.0.1:8000/product/" + relData[i].fields.slug + "/"
+        );
+        ar.innerHTML = relData[i].fields.title;
+        var sp2 = document.createElement("span");
+        sp2.className = "badge badge-pill {{ item.get_label_display }}-color";
+        ar.appendChild(sp2);
+        strong.appendChild(ar);
+        h5.appendChild(strong); ///////////////////////////
+
+        var h4 = document.createElement("h4");
+        h4.className = "font-weight-bold blue-text";
+        var strong2 = document.createElement("strong");
+        if (relData[i].fields.discount_price) {
+          strong2.innerHTML = relData[i].fields.discount_price + "$";
+        } else {
+          strong2.innerHTML = relData[i].fields.price + "$";
+        }
+        h4.appendChild(strong2); //////////
+
+        var MainDiv = document.createElement("div");
+        MainDiv.className = "col-lg-3 col-md-6 mb-4 prdS";
+        var MainDiv2 = document.createElement("div");
+        MainDiv2.className = "card cardDep";
+
+        MainDiv2.appendChild(div1);
+        MainDiv2.appendChild(div3);
+        MainDiv2.appendChild(h5);
+        MainDiv2.appendChild(h4);
+        var atr = document.createElement("a");
+        atr.setAttribute(
+          "href",
+          "http://127.0.0.1:8000/product/" + relData[i].fields.slug + "/"
+        );
+        atr.appendChild(MainDiv2);
+        MainDiv.appendChild(atr);
+        listing_table.appendChild(MainDiv);
+      }
+
+      if (page == 1) {
+        btn_prev.style.visibility = "hidden";
+      } else {
+        btn_prev.style.visibility = "visible";
+      }
+
+      if (page == pagesNum) {
+        btn_next.style.visibility = "hidden";
+      } else {
+        btn_next.style.visibility = "visible";
+      }
+    }
+
+    window.onload = function () {
+      var mydataString = "{{object_list|escapejs}}";
+      myData = JSON.parse(mydataString);
+
+      for (item of myData) {
+        if (item.fields.category === "L") {
+          BakeryData.push(item);
+        }
+        if (item.fields.category === "V") {
+          VeggiesData.push(item);
+        }
+        if (item.fields.category === "Me") {
+          MeatData.push(item);
+        }
+        if (item.fields.category === "Mi") {
+          MilkData.push(item);
+        }
+        if (item.fields.category === "O") {
+          OtherData.push(item);
+        }
+      }
+      if (localStorage.getItem("current_pageBakeryH") === "NaN") {
+        changePage(1, "L");
+      } else {
+        changePage(parseInt(localStorage.getItem("current_pageBakeryH")), "L");
+      }
+      if (localStorage.getItem("current_pageMilkH") === "NaN") {
+        changePage(1, "Mi");
+      } else {
+        changePage(parseInt(localStorage.getItem("current_pageMilkH")), "Mi");
+      }
+      if (localStorage.getItem("current_pageMeatH") === "NaN") {
+        changePage(1, "Me");
+      } else {
+        changePage(parseInt(localStorage.getItem("current_pageMeatH")), "Me");
+      }
+      if (localStorage.getItem("current_pageOtherH") === "NaN") {
+        changePage(1, "O");
+      } else {
+        changePage(parseInt(localStorage.getItem("current_pageOtherH")), "O");
+      }
+      if (localStorage.getItem("current_pageVeggiesH") === "NaN") {
+        changePage(1, "V");
+      } else {
+        changePage(parseInt(localStorage.getItem("current_pageVeggiesH")), "V");
+      }
+    };
+  </script>
+</main>
 {% endblock content %}
-
-

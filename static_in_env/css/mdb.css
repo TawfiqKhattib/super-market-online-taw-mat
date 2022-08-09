@@ -1739,6 +1739,7 @@ a.text-light:hover, a.text-light:focus {
 .view {
   position: relative;
   overflow: hidden;
+
   cursor: default; }
   .view .mask {
     position: absolute;

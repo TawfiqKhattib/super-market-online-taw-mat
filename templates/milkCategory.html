@@ -1,0 +1,269 @@
+{% extends "base.html" %} {% block content %}
+<main>
+  <div class="container">
+    <!--Navbar-->
+    <nav
+      class="navbar navbar-expand-lg navbar-dark mdb-color lighten-3 mt-3 mb-5"
+    >
+      <!-- Navbar brand -->
+      <span class="navbar-brand">Categories:</span>
+
+      <!-- Collapse button -->
+      <button
+        class="navbar-toggler"
+        type="button"
+        data-toggle="collapse"
+        data-target="#basicExampleNav"
+        aria-controls="basicExampleNav"
+        aria-expanded="false"
+        aria-label="Toggle navigation"
+      >
+        <span class="navbar-toggler-icon"></span>
+      </button>
+
+      <!-- Collapsible content -->
+      <div class="collapse navbar-collapse" id="basicExampleNav">
+        <!-- Links -->
+        <ul class="navbar-nav mr-auto">
+          <li class="nav-item active">
+            <a class="nav-link" href="/"
+              >All
+              <span class="sr-only">(current)</span>
+            </a>
+          </li>
+          <li class="nav-item">
+            <a class="nav-link" href="/legumeCategory/">Bakery</a>
+          </li>
+          <li class="nav-item">
+            <a class="nav-link" href="/veggiesCategory/">Veggies</a>
+          </li>
+          <li class="nav-item">
+            <a class="nav-link" href="/meatCategory/">Meat</a>
+          </li>
+          <li class="nav-item">
+            <a class="nav-link" href="/milkCategory/">Milk</a>
+          </li>
+          <li class="nav-item">
+            <a class="nav-link" href="/othersCategory/">Others</a>
+          </li>
+          <li class="nav-item">
+            <a class="nav-link" href="/recommendedCategory/">Recommended</a>
+          </li>
+          <li class="nav-item">
+            <a class="nav-link" href="/Chat/">Chat</a>
+          </li>
+        </ul>
+        <!-- Links -->
+
+        <form class="form-inline">
+          <div class="md-form my-0">
+            <input
+              class="form-control mr-sm-2"
+              type="text"
+              placeholder="Search"
+              aria-label="Search"
+            />
+          </div>
+        </form>
+      </div>
+      <!-- Collapsible content -->
+    </nav>
+    <!--/.Navbar-->
+
+    <!--Section: Products v.3-->
+
+    <section class="text-center mb-4">
+      <div id="MilkDiv" class="ctaegoryOrder">
+        {% comment %}
+        <button class="page-link" id="btn_prevMi" onclick="prevPageMilk()">
+          Previous
+        </button>
+        {% endcomment %}
+
+        <div class="card CategoryDivPage" id="MilkDivPage"></div>
+
+        {% comment %}
+        <button class="page-link" id="btn_nextMi" onclick="nextPageMilk()">
+          Next
+        </button>
+        {% endcomment %}
+      </div>
+      <div id="MilkPage" class="Pageing"></div>
+    </section>
+  </div>
+
+  <script>
+    var records_per_page = 12;
+    var myData = [];
+    var current_pageMilk = 1;
+    var MilkData = [];
+
+    localStorage.setItem('current_pageBakery', 1);
+    localStorage.setItem('current_pageVeggies', 1);
+    localStorage.setItem('current_pageMeat', 1);
+    localStorage.setItem('current_pageOther', 1);
+    localStorage.setItem('current_pageRecomend', 1);
+
+    localStorage.setItem('current_pageRecomendH', 1);
+    localStorage.setItem('current_pageBakeryH', 1);
+    localStorage.setItem('current_pageVeggiesH', 1);
+    localStorage.setItem('current_pageMeatH', 1);
+    localStorage.setItem('current_pageMilkH', 1);
+    localStorage.setItem('current_pageOtherH', 1);
+    {% comment %} function prevPageMilk() {
+      if (current_pageMilk > 1) {
+        current_pageMilk--;
+        changePage(current_pageMilk, "Mi");
+      }
+    }
+
+    function nextPageMilk() {
+      if (current_pageMilk < numPagesMilk()) {
+        current_pageMilk++;
+        changePage(current_pageMilk, "Mi");
+      }
+    }
+
+    function MilkPage() {
+      if (current_pageMilk < numPagesMilk()) {
+        current_pageMilk++;
+        changePage(current_pageMilk, "Mi");
+      }
+    } {% endcomment %}
+
+    function numPagesMilk() {
+      return Math.ceil(MilkData.length / records_per_page);
+    }
+
+    function changePage(page) {
+      //var btn_next = document.getElementById("btn_nextMi");
+      //var btn_prev = document.getElementById("btn_prevMi");
+      localStorage.setItem('current_pageMilk', page);
+      var listing_table = document.getElementById("MilkDivPage");
+      listing_table.innerHTML = "";
+
+      for (
+        var i = (page - 1) * records_per_page;
+        i < page * records_per_page && i < MilkData.length;
+        i++
+      ) {
+        var div1 = document.createElement("div");
+        div1.className = "view overlay";
+        var img = document.createElement("img");
+        img.className = "card-img-top";
+        img.src = MilkData[i].fields.image;
+        var aCat = document.createElement("a");
+        aCat.className = "nav-link waves-effect waves-light";
+        aCat.setAttribute(
+          "href",
+          "http://127.0.0.1:8000/product/" + MilkData[i].fields.slug + "/"
+        );
+        var div2 = document.createElement("div");
+        div2.className = "mask rgba-white-slight";
+        aCat.appendChild(div2);
+
+        div1.appendChild(img);
+        div1.appendChild(aCat); ////////////////////////////
+
+        var div3 = document.createElement("div");
+        div3.className = "card-body text-center";
+        var a = document.createElement("a");
+        a.className = "grey-text nav-link waves-effect waves-light";
+        a.setAttribute(
+          "href",
+          "http://127.0.0.1:8000/product/" + MilkData[i].fields.slug + "/"
+        );
+        //var h = document.createElement("h5");
+        //h.innerHTML = MilkData[i].fields.category;
+        // a.appendChild(h);
+        div3.appendChild(a); ///////////////
+
+        var h5 = document.createElement("h5");
+        var strong = document.createElement("strong");
+        var ar = document.createElement("a");
+        ar.className = "dark-grey-text nav-link waves-effect waves-light";
+        ar.setAttribute(
+          "href",
+          "http://127.0.0.1:8000/product/" + MilkData[i].fields.slug + "/"
+        );
+        ar.innerHTML = MilkData[i].fields.title;
+        var sp2 = document.createElement("span");
+        sp2.className = "badge badge-pill {{ item.get_label_display }}-color";
+        ar.appendChild(sp2);
+        strong.appendChild(ar);
+        h5.appendChild(strong); ///////////////////////////
+
+        var h4 = document.createElement("h4");
+        h4.className = "font-weight-bold blue-text";
+        var strong2 = document.createElement("strong");
+        if (MilkData[i].fields.discount_price) {
+          strong2.innerHTML = MilkData[i].fields.discount_price + "$";
+        } else {
+          strong2.innerHTML = MilkData[i].fields.price + "$";
+        }
+        h4.appendChild(strong2); //////////
+
+        var MainDiv = document.createElement("div");
+        MainDiv.className = "col-lg-3 col-md-6 mb-4 prdS";
+        var MainDiv2 = document.createElement("div");
+        MainDiv2.className = "card cardDep";
+
+        MainDiv2.appendChild(div1);
+        MainDiv2.appendChild(div3);
+        MainDiv2.appendChild(h5);
+        MainDiv2.appendChild(h4);
+        MainDiv.appendChild(MainDiv2);
+        listing_table.appendChild(MainDiv);
+
+        window.scroll({
+          top: 0,
+          left: 0,
+          behavior: 'smooth'
+         });
+      }
+
+      /* if (page == 1) {
+        btn_prev.style.visibility = "hidden";
+      } else {
+        btn_prev.style.visibility = "visible";
+      }
+
+      if (page == pagesNum) {
+        btn_next.style.visibility = "hidden";
+      } else {
+        btn_next.style.visibility = "visible";
+      }*/
+    }
+
+    window.onload = function () {
+      var mydataString = "{{object_list|escapejs}}";
+      myData = JSON.parse(mydataString);
+      for (item of myData) {
+        if (item.fields.category === "Mi") {
+          MilkData.push(item);
+        }
+      }
+
+      var milkPage = document.getElementById("MilkPage");
+      var pagesNum = numPagesMilk();
+
+      for (var i = 0; i < pagesNum; i++) {
+        var button = document.createElement("button");
+        button.className = "paggingCategory";
+        button.innerHTML = i + 1;
+        button.setAttribute("onclick", 'changePage("'+(i + 1)+'")');
+        {% comment %} button.onclick = function () {
+          changePage(i + 1);
+        }; {% endcomment %}
+        milkPage.appendChild(button);
+      }
+      if(localStorage.getItem('current_pageMilk')==='null'){
+        changePage(1);
+      }
+      else{
+        changePage(parseInt(localStorage.getItem('current_pageMilk')));
+      }
+    };
+  </script>
+</main>
+{% endblock content %}
